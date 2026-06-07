@@ -1,8 +1,13 @@
+"""
+main.py
+─────────────────────────────────────────────────────────────
+Orchestrator. Runs fetch → clean → load → log.
+"""
+
 import os
 import time
-import asyncio
 import traceback
-import libsql_client
+import libsql
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 
@@ -14,32 +19,26 @@ load_dotenv()
 TURSO_URL = os.getenv("TURSO_URL")
 TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
 
-# Force HTTP mode (same fix as in load_data.py)
-if TURSO_URL and TURSO_URL.startswith("libsql://"):
-    TURSO_URL = TURSO_URL.replace("libsql://", "https://", 1)
-
-async def _log_pipeline_run_async(status, rows_inserted, duration_seconds, error_message=None):
-    """Write one audit row to pipeline_runs in Turso. Never raises."""
-    try:
-        async with libsql_client.create_client(
-            url=TURSO_URL,
-            auth_token=TURSO_AUTH_TOKEN,
-        ) as client:
-            await client.execute(
-                """
-                INSERT INTO pipeline_runs (
-                    status, rows_inserted, duration_seconds, error_message
-                ) VALUES (?, ?, ?, ?)
-                """,
-                (status, rows_inserted, duration_seconds, error_message),
-            )
-    except Exception as e:
-        print(f"⚠️  Failed to write to pipeline_runs: {e}")
-
 
 def log_pipeline_run(status, rows_inserted, duration_seconds, error_message=None):
-    """Sync wrapper so the rest of main.py stays simple."""
-    asyncio.run(_log_pipeline_run_async(status, rows_inserted, duration_seconds, error_message))
+    """Write one audit row to pipeline_runs. Never raises."""
+    try:
+        conn = libsql.connect(
+            database=TURSO_URL,
+            auth_token=TURSO_AUTH_TOKEN,
+        )
+        conn.execute(
+            """
+            INSERT INTO pipeline_runs (
+                status, rows_inserted, duration_seconds, error_message
+            ) VALUES (?, ?, ?, ?)
+            """,
+            (status, rows_inserted, duration_seconds, error_message),
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"⚠️  Failed to write to pipeline_runs: {e}")
 
 
 def run_pipeline():

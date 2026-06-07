@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install requests libsql-client python-dotenv
+          pip install requests libsql python-dotenv
       
       - name: Run the pipeline
         env:
