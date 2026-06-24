@@ -113,3 +113,9 @@ git clone https://github.com/saisandhyak/crypto-pipeline.git
 cd crypto-pipeline
 
 pip install -r requirements.txt
+
+## Disclaimer
+
+This is a portfolio project and not financial advice. Data is sourced from CoinGecko on a best-effort basis. Tier assignments and quality flags reflect public research and regulatory guidance as of the project date; they are not endorsements or recommendations.
+
+Built by Sai Sandhya Kurakula.
