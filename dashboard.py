@@ -1,5 +1,5 @@
 import os
-import libsql
+import libsql_experimental as libsql
 import streamlit as st
 import pandas as pd
 import plotly.express as px
